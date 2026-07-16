@@ -1,0 +1,58 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from database.database import get_db
+from models.user import User
+from schemas.user_schema import RegisterUser
+from utils.password import hash_password
+from schemas.user_schema import LoginUser
+from utils.password import verify_password
+from utils.jwt_handler import create_access_token 
+from middleware.auth_middleware import get_current_user
+
+router = APIRouter()
+
+
+@router.post("/register")
+def register(user: RegisterUser, db: Session = Depends(get_db)):
+
+    new_user = User(
+        fullname=user.fullname,
+        email=user.email,
+        password=hash_password(user.password)
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {
+        "message": "User Registered Successfully"
+    }
+
+@router.post("/login")
+def login(user: LoginUser, db: Session = Depends(get_db)):
+
+    db_user = db.query(User).filter(User.email == user.email).first()
+
+    if not db_user:
+        return {"message": "User not found"}
+
+    if not verify_password(user.password, db_user.password):
+        return {"message": "Invalid Password"}
+
+    token = create_access_token(
+       {"sub": db_user.email}
+)
+
+    return {
+    "message": "Login Successful",
+    "access_token": token,
+    "token_type": "Bearer"
+}
+
+@router.get("/dashboard")
+def dashboard(user=Depends(get_current_user)):
+    return {
+        "message": "Welcome to PaySmart Dashboard 🚀",
+        "user": user
+    }
