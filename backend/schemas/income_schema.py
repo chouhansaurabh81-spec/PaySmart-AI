@@ -2,16 +2,16 @@ from pydantic import BaseModel
 from datetime import date
 
 
-class ExpenseCreate(BaseModel):
+class IncomeCreate(BaseModel):
     title: str
     amount: float
-    category: str
+    source: str
     date: date
     description: str
 
-class ExpenseUpdate(BaseModel):
+class IncomeUpdate(BaseModel):
     title: str
     amount: float
-    category: str
+    source: str
     date: date
     description: str

@@ -11,3 +11,4 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
     expenses = relationship("Expense", back_populates="owner")
+    incomes = relationship("Income", back_populates="owner")

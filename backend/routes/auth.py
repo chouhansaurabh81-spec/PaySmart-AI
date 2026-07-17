@@ -50,8 +50,8 @@ def login(user: LoginUser, db: Session = Depends(get_db)):
     "token_type": "Bearer"
 }
 
-@router.get("/dashboard")
-def dashboard(user=Depends(get_current_user)):
+@router.get("/profile")
+def profile(user=Depends(get_current_user)):
     return {
         "message": "Welcome to PaySmart Dashboard 🚀",
         "user": user
