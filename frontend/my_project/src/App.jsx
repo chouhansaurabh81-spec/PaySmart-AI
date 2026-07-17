@@ -8,6 +8,8 @@ import Payment from "./pages/Payment";
 import Profile from "./pages/Profile";
 import Transactions from "./pages/Transactions";
 
+import Income from "./pages/Income";
+
 function App() {
   return (
     <Routes>
@@ -25,6 +27,8 @@ function App() {
       <Route path="/profile" element={<Profile />} />
 
       <Route path="/transactions" element={<Transactions />} />
+
+      <Route path="/income" element={<Income />} />
 
     </Routes>
   );

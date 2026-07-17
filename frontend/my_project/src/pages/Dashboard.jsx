@@ -66,7 +66,12 @@ function Dashboard(){
 
       <ul className="space-y-5">
         <li className="hover:text-green-400 cursor-pointer">📊 Dashboard</li>
-        <li className="hover:text-green-400 cursor-pointer">💰 Income</li>
+        <li
+  onClick={() => navigate("/income")}
+  className="hover:text-green-400 cursor-pointer"
+>
+  💰 Income
+</li>
         <li className="hover:text-green-400 cursor-pointer">💸 Expense</li>
         <li className="hover:text-green-400 cursor-pointer">📈 Analytics</li>
         <li className="hover:text-green-400 cursor-pointer">👤 Profile</li>
