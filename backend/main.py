@@ -26,7 +26,7 @@ app.include_router(analytics_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5179"
+        "http://localhost:5174"
     ],
     allow_credentials=True,
     allow_methods=["*"],

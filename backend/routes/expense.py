@@ -73,57 +73,6 @@ def get_expense(expense_id: int, db: Session = Depends(get_db)):
 @router.put("/expense/{expense_id}")
 def update_expense(
     expense_id: int,
-    expense: ExpenseCreate,
-    db: Session = Depends(get_db)
-):
-
-    db_expense = db.query(Expense).filter(
-        Expense.id == expense_id
-    ).first()
-
-    if not db_expense:
-        return {
-            "message": "Expense Not Found"
-        }
-
-    db_expense.title = expense.title
-    db_expense.amount = expense.amount
-    db_expense.category = expense.category
-    db_expense.date = expense.date
-    db_expense.description = expense.description
-
-    db.commit()
-    db.refresh(db_expense)
-
-    return {
-        "message": "Expense Updated Successfully"
-    }
-
-@router.delete("/expense/{expense_id}")
-def delete_expense(
-    expense_id: int,
-    db: Session = Depends(get_db)
-):
-
-    expense = db.query(Expense).filter(
-        Expense.id == expense_id
-    ).first()
-
-    if not expense:
-        return {
-            "message": "Expense Not Found"
-        }
-
-    db.delete(expense)
-    db.commit()
-
-    return {
-        "message": "Expense Deleted Successfully"
-    }
-
-@router.put("/expense/{expense_id}")
-def update_expense(
-    expense_id: int,
     expense: ExpenseUpdate,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
