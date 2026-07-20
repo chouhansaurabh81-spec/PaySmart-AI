@@ -65,16 +65,31 @@ function Dashboard(){
       <h1 className="text-2xl font-bold mb-10">PaySmart-AI</h1>
 
       <ul className="space-y-5">
-        <li className="hover:text-green-400 cursor-pointer">📊 Dashboard</li>
-        <li
-  onClick={() => navigate("/income")}
-  className="hover:text-green-400 cursor-pointer"
->
+        <li onClick={() => navigate("/dashboard")}
+            className="hover:text-green-400 cursor-pointer"
+        >
+  📊 Dashboard
+</li>
+        <li onClick={() => navigate("/income")}
+            className="hover:text-green-400 cursor-pointer"
+        >
   💰 Income
 </li>
-        <li className="hover:text-green-400 cursor-pointer">💸 Expense</li>
-        <li className="hover:text-green-400 cursor-pointer">📈 Analytics</li>
-        <li className="hover:text-green-400 cursor-pointer">👤 Profile</li>
+        <li onClick={() => navigate("/expense")}
+            className="hover:text-green-400 cursor-pointer"
+        >
+  💸 Expense
+</li>
+        <li onClick={() => navigate("/analytics")}
+            className="hover:text-green-400 cursor-pointer"
+        >
+  📈 Analytics
+</li>
+        <li onClick={() => navigate("/profile")}
+            className="hover:text-green-400 cursor-pointer"
+        >
+  👤 Profile
+</li>
       </ul>
     </div>
 

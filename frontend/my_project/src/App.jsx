@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Payment from "./pages/Payment";
 import Profile from "./pages/Profile";
 import Transactions from "./pages/Transactions";
+import Analytics from "./pages/Analytics";
 
 import Expense from "./pages/Expense";
 
@@ -33,6 +34,8 @@ function App() {
       <Route path="/income" element={<Income />} />
 
       <Route path="/expense" element={<Expense />} />
+
+      <Route path="/analytics" element={<Analytics />} />
 
     </Routes>
   );
