@@ -15,3 +15,13 @@ dist/
 build/
 
 *.log
+
+*.zip
+
+node_modules/
+
+__pycache__/
+
+.venv/
+
+venv/

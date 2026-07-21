@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from database.database import get_db
 from models.user import User
-from schemas.user_schema import RegisterUser
 from utils.password import hash_password
-from schemas.user_schema import LoginUser
+from schemas.user_schema import RegisterUser, LoginUser, UpdateProfile
 from utils.password import verify_password
 from utils.jwt_handler import create_access_token 
 from middleware.auth_middleware import get_current_user
@@ -51,8 +50,46 @@ def login(user: LoginUser, db: Session = Depends(get_db)):
 }
 
 @router.get("/profile")
-def profile(user=Depends(get_current_user)):
+def profile(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+
+    db_user = db.query(User).filter(
+        User.email == current_user["sub"]
+    ).first()
+
     return {
-        "message": "Welcome to PaySmart Dashboard 🚀",
-        "user": user
+        "fullname": db_user.fullname,
+        "email": db_user.email
+    }
+
+@router.put("/profile")
+def update_profile(
+    profile: UpdateProfile,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+
+    user = db.query(User).filter(
+        User.email == current_user["sub"]
+    ).first()
+
+    if not user:
+        return {
+            "message": "User not found"
+        }
+
+    user.fullname = profile.fullname
+    user.email = profile.email
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": "Profile Updated Successfully",
+        "user": {
+            "fullname": user.fullname,
+            "email": user.email
+        }
     }

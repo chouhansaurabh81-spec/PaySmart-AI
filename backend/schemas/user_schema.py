@@ -9,3 +9,7 @@ class RegisterUser(BaseModel):
 class LoginUser(BaseModel):
     email: EmailStr
     password: str
+
+class UpdateProfile(BaseModel):
+    fullname: str
+    email: EmailStr

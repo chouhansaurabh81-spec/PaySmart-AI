@@ -13,6 +13,8 @@ import Expense from "./pages/Expense";
 
 import Income from "./pages/Income";
 
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function App() {
   return (
     <Routes>
@@ -23,19 +25,19 @@ function App() {
 
       <Route path="/register" element={<Register />} />
 
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>}/>
 
-      <Route path="/payment" element={<Payment />} />
+      <Route path="/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>}/>
 
-      <Route path="/profile" element={<Profile />} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>}/>
 
-      <Route path="/transactions" element={<Transactions />} />
+      <Route path="/transactions" element={<ProtectedRoute><Transactions /></ProtectedRoute>}/>
 
-      <Route path="/income" element={<Income />} />
+      <Route path="/income" element={<ProtectedRoute><Income /></ProtectedRoute>}/>
 
-      <Route path="/expense" element={<Expense />} />
+      <Route path="/expense" element={<ProtectedRoute><Expense /></ProtectedRoute>}/>
 
-      <Route path="/analytics" element={<Analytics />} />
+      <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>}/>
 
     </Routes>
   );

@@ -45,8 +45,15 @@ function Dashboard(){
   }
 
   function handleLogout() {
+  const confirmLogout = window.confirm(
+    "Are you sure you want to logout?"
+  );
+
+  if (!confirmLogout) return;
+
   localStorage.removeItem("token");
-  navigate("/login");
+
+  navigate("/login", { replace: true });
 }
 
   if (!data) {
