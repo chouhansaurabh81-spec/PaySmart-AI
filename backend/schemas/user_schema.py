@@ -13,3 +13,8 @@ class LoginUser(BaseModel):
 class UpdateProfile(BaseModel):
     fullname: str
     email: EmailStr
+
+class ChangePassword(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_password: str

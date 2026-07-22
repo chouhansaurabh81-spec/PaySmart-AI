@@ -8,6 +8,9 @@ from utils.password import verify_password
 from utils.jwt_handler import create_access_token 
 from middleware.auth_middleware import get_current_user
 
+from schemas.user_schema import ChangePassword
+from utils.password import verify_password, hash_password
+
 router = APIRouter()
 
 
@@ -92,4 +95,41 @@ def update_profile(
             "fullname": user.fullname,
             "email": user.email
         }
+    }
+
+@router.put("/change-password")
+def change_password(
+    password_data: ChangePassword,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+
+    user = db.query(User).filter(
+        User.email == current_user["sub"]
+    ).first()
+
+    if not user:
+        return {
+            "message": "User not found"
+        }
+
+    if not verify_password(
+        password_data.current_password,
+        user.password
+    ):
+        return {
+            "message": "Current password is incorrect"
+        }
+
+    if password_data.new_password != password_data.confirm_password:
+        return {
+            "message": "New password and Confirm password do not match"
+        }
+
+    user.password = hash_password(password_data.new_password)
+
+    db.commit()
+
+    return {
+        "message": "Password changed successfully"
     }
