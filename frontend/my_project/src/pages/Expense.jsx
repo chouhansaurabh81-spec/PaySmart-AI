@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import api from "../services/api";
 
 function Expense() {
+  // ===========================
+  // State
+  // ===========================
+
   const [formData, setFormData] = useState({
     title: "",
     amount: "",
@@ -14,32 +18,67 @@ function Expense() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
 
-const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-};
+  // Search & Filters
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
+  const [sort, setSort] = useState("latest");
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  // ===========================
+  // Fetch Expenses
+  // ===========================
 
-  try {
+  const fetchExpenses = async (searchValue = "") => {
+    try {
+      setLoading(true);
 
-    let response;
+      const response = await api.get("/expenses", {
+        params: {
+          search: searchValue,
+          category: categoryFilter,
+          from_date: fromDate,
+          to_date: toDate,
+          min_amount: minAmount || undefined,
+          max_amount: maxAmount || undefined,
+          sort,
+        },
+      });
 
-    if (editingId) {
-       response = await api.put(`/expense/${editingId}`, formData);
-       alert("Expense Updated Successfully!");
-    } else {
-        response = await api.post("/expense", formData);
-       alert("Expense Added Successfully!");
+      setExpenses(response.data.expenses);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    console.log(response.data);
+  useEffect(() => {
+    fetchExpenses(search);
+  }, [
+    search,
+    categoryFilter,
+    fromDate,
+    toDate,
+    minAmount,
+    maxAmount,
+    sort,
+  ]);
 
-    fetchExpenses();
+  // ===========================
+  // Form Handlers
+  // ===========================
 
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const resetForm = () => {
     setFormData({
       title: "",
       amount: "",
@@ -49,61 +88,136 @@ const handleSubmit = async (e) => {
     });
 
     setEditingId(null);
+  };
 
-  } catch (error) {
-    console.error(error);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    alert(editingId ? "Failed to update expense" : "Failed to add expense");
-  }
-};
+    try {
+      if (editingId) {
+        await api.put(`/expense/${editingId}`, formData);
+        alert("Expense Updated Successfully!");
+      } else {
+        await api.post("/expense", formData);
+        alert("Expense Added Successfully!");
+      }
 
-const fetchExpenses = async () => {
-  try {
-    const response = await api.get("/expenses");
+      resetForm();
+      fetchExpenses(search);
+    } catch (error) {
+      console.error(error);
 
-    setExpenses(response.data.expenses);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setLoading(false);
-  }
-};
+      alert(
+        editingId
+          ? "Failed to update expense"
+          : "Failed to add expense"
+      );
+    }
+  };
 
-const deleteExpense = async (id) => {
-  try {
-    await api.delete(`/expense/${id}`);
+  const editExpense = (expense) => {
+    setEditingId(expense.id);
 
-    alert("Expense Deleted Successfully!");
+    setFormData({
+      title: expense.title,
+      amount: expense.amount,
+      category: expense.category,
+      date: expense.date,
+      description: expense.description,
+    });
+  };
 
-    fetchExpenses();
-  } catch (error) {
-    console.error(error);
+  const deleteExpense = async (id) => {
+    if (!window.confirm("Delete this expense?")) return;
 
-    alert("Failed to delete expense");
-  }
-};
+    try {
+      await api.delete(`/expense/${id}`);
 
-const editExpense = (expense) => {
-  setEditingId(expense.id);
+      alert("Expense Deleted Successfully!");
 
-  setFormData({
-    title: expense.title,
-    amount: expense.amount,
-    category: expense.category,
-    date: expense.date,
-    description: expense.description,
-  });
-};
-
-useEffect(() => {
-  fetchExpenses();
-}, []);
+      fetchExpenses(search);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete expense");
+    }
+  };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Expense Management</h1>
+    <div className="max-w-5xl mx-auto p-6">
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <h1 className="text-3xl font-bold mb-6">
+        Expense Management
+      </h1>
+
+      {/* Search */}
+
+      <input
+        type="text"
+        placeholder="🔍 Search by Title or Category..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border rounded-lg p-3 mb-6"
+      />
+
+      {/* Filters */}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+
+        <input
+          type="text"
+          placeholder="Category"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="border rounded p-3"
+        />
+
+        <input
+          type="date"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          className="border rounded p-3"
+        />
+
+        <input
+          type="date"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          className="border rounded p-3"
+        />
+
+        <input
+          type="number"
+          placeholder="Min Amount"
+          value={minAmount}
+          onChange={(e) => setMinAmount(e.target.value)}
+          className="border rounded p-3"
+        />
+
+        <input
+          type="number"
+          placeholder="Max Amount"
+          value={maxAmount}
+          onChange={(e) => setMaxAmount(e.target.value)}
+          className="border rounded p-3"
+        />
+
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="border rounded p-3"
+        >
+          <option value="latest">Latest</option>
+          <option value="oldest">Oldest</option>
+        </select>
+
+      </div>
+
+      {/* Expense Form */}
+
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow-lg rounded-lg p-6 space-y-4"
+      >
 
         <input
           type="text"
@@ -150,57 +264,83 @@ useEffect(() => {
 
         <button
           type="submit"
-          className="w-full bg-red-600 text-white p-3 rounded hover:bg-red-700"
+          className={`w-full text-white p-3 rounded transition ${
+            editingId
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-red-600 hover:bg-red-700"
+          }`}
         >
           {editingId ? "Update Expense" : "Add Expense"}
         </button>
 
       </form>
-      <hr className="my-8" />
-      <h2 className="text-2xl font-bold mb-4">All Expenses</h2>
 
-      {loading ? ( <p>Loading...</p>
-) : (
-  <table className="w-full border-collapse border">
-    <thead>
-      <tr className="bg-gray-200">
-        <th className="border p-2">Title</th>
-        <th className="border p-2">Amount</th>
-        <th className="border p-2">Category</th>
-        <th className="border p-2">Date</th>
-        <th className="border p-2">Description</th>
-        <th className="border p-2">Actions</th>
-      </tr>
-    </thead>
+      {/* Expense List */}
 
-    <tbody>
-      {expenses.map((expense) => (
-        <tr key={expense.id}>
-          <td className="border p-2">{expense.title}</td>
-          <td className="border p-2">₹{expense.amount}</td>
-          <td className="border p-2">{expense.category}</td>
-          <td className="border p-2">{expense.date}</td>
-          <td className="border p-2">{expense.description}</td>
-          <td className="border p-2">
-            <button
-               onClick={() => editExpense(expense)}
-               className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded mr-2"
-            >
-                Edit
-            </button>
-            <button
-               onClick={() => deleteExpense(expense.id)}
-               className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-            >
-                Delete
-            </button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-)}
-   </div>
+      <div className="mt-8">
+
+        <h2 className="text-2xl font-bold mb-4">
+          All Expenses
+        </h2>
+
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <table className="w-full border-collapse border">
+
+            <thead>
+
+              <tr className="bg-gray-200">
+                <th className="border p-2">Title</th>
+                <th className="border p-2">Amount</th>
+                <th className="border p-2">Category</th>
+                <th className="border p-2">Date</th>
+                <th className="border p-2">Description</th>
+                <th className="border p-2">Actions</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {expenses.map((expense) => (
+                <tr key={expense.id}>
+
+                  <td className="border p-2">{expense.title}</td>
+                  <td className="border p-2">₹{expense.amount}</td>
+                  <td className="border p-2">{expense.category}</td>
+                  <td className="border p-2">{expense.date}</td>
+                  <td className="border p-2">{expense.description}</td>
+
+                  <td className="border p-2">
+
+                    <button
+                      onClick={() => editExpense(expense)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded mr-2"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => deleteExpense(expense.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+
+                  </td>
+
+                </tr>
+              ))}
+
+            </tbody>
+
+          </table>
+        )}
+
+      </div>
+
+    </div>
   );
 }
 

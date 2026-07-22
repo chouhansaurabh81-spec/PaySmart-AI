@@ -1,24 +1,29 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from database.database import get_db
-from models.expense import Expense
-from schemas.expense_schema import ExpenseCreate
-
-from models.user import User
 from middleware.auth_middleware import get_current_user
-
+from models.expense import Expense
+from models.user import User
 from schemas.expense_schema import ExpenseCreate, ExpenseUpdate
-
-from sqlalchemy import func
 
 router = APIRouter()
 
 
-@router.post("/expense")
-def add_expense( expense: ExpenseCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+def get_logged_in_user(db: Session, current_user):
+    return db.query(User).filter(
+        User.email == current_user["sub"]
+    ).first()
 
-    user = db.query(User).filter(User.email == current_user["sub"]).first()
+
+@router.post("/expense")
+def add_expense(
+    expense: ExpenseCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    user = get_logged_in_user(db, current_user)
 
     new_expense = Expense(
         title=expense.title,
@@ -33,42 +38,89 @@ def add_expense( expense: ExpenseCreate, db: Session = Depends(get_db), current_
     db.commit()
     db.refresh(new_expense)
 
-    return {
-        "message": "Expense Added Successfully"
-    }
+    return {"message": "Expense Added Successfully"}
+
 
 @router.get("/expenses")
 def get_all_expenses(
+    search: str = Query(default=""),
+    category: str = Query(default=""),
+    from_date: str = Query(default=""),
+    to_date: str = Query(default=""),
+    min_amount: float | None = None,
+    max_amount: float | None = None,
+    sort: str = Query(default="latest"),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
+    user = get_logged_in_user(db, current_user)
 
-    user = db.query(User).filter(
-        User.email == current_user["sub"]
-    ).first()
-
-    expenses = db.query(Expense).filter(
+    query = db.query(Expense).filter(
         Expense.user_id == user.id
-    ).all()
+    )
+
+    if search:
+        query = query.filter(
+            Expense.title.ilike(f"%{search}%") |
+            Expense.category.ilike(f"%{search}%")
+        )
+
+    if category:
+        query = query.filter(
+            Expense.category == category
+        )
+
+    if from_date:
+        query = query.filter(
+            Expense.date >= from_date
+        )
+
+    if to_date:
+        query = query.filter(
+            Expense.date <= to_date
+        )
+
+    if min_amount is not None:
+        query = query.filter(
+            Expense.amount >= min_amount
+        )
+
+    if max_amount is not None:
+        query = query.filter(
+            Expense.amount <= max_amount
+        )
+
+    if sort == "oldest":
+        query = query.order_by(Expense.date.asc())
+    else:
+        query = query.order_by(Expense.date.desc())
+
+    expenses = query.all()
 
     return {
         "count": len(expenses),
         "expenses": expenses
     }
 
+
 @router.get("/expense/{expense_id}")
-def get_expense(expense_id: int, db: Session = Depends(get_db)):
+def get_expense(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    user = get_logged_in_user(db, current_user)
 
     expense = db.query(Expense).filter(
-        Expense.id == expense_id
+        Expense.id == expense_id,
+        Expense.user_id == user.id
     ).first()
 
     if not expense:
-        return {
-            "message": "Expense Not Found"
-        }
+        return {"message": "Expense Not Found"}
 
     return expense
+
 
 @router.put("/expense/{expense_id}")
 def update_expense(
@@ -77,9 +129,7 @@ def update_expense(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    user = db.query(User).filter(
-        User.email == current_user["sub"]
-    ).first()
+    user = get_logged_in_user(db, current_user)
 
     existing_expense = db.query(Expense).filter(
         Expense.id == expense_id,
@@ -103,15 +153,14 @@ def update_expense(
         "expense": existing_expense
     }
 
+
 @router.delete("/expense/{expense_id}")
 def delete_expense(
     expense_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    user = db.query(User).filter(
-        User.email == current_user["sub"]
-    ).first()
+    user = get_logged_in_user(db, current_user)
 
     expense = db.query(Expense).filter(
         Expense.id == expense_id,
@@ -124,18 +173,15 @@ def delete_expense(
     db.delete(expense)
     db.commit()
 
-    return {
-        "message": "Expense deleted successfully"
-    }
+    return {"message": "Expense deleted successfully"}
+
 
 @router.get("/expense-summary")
 def expense_summary(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    user = db.query(User).filter(
-        User.email == current_user["sub"]
-    ).first()
+    user = get_logged_in_user(db, current_user)
 
     summary = (
         db.query(
