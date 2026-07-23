@@ -26,12 +26,21 @@ function Analytics() {
 
   const [monthlyData, setMonthlyData] = useState([]);
   const [categoryData, setCategoryData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSummary();
-    fetchMonthlyData();
-    fetchCategoryData();
-  }, []);
+  async function loadAnalytics() {
+    await Promise.all([
+      fetchSummary(),
+      fetchMonthlyData(),
+      fetchCategoryData(),
+    ]);
+
+    setLoading(false);
+  }
+
+  loadAnalytics();
+}, []);
 
   async function fetchSummary() {
     try {
@@ -96,35 +105,46 @@ function Analytics() {
     "#FF4560",
   ];
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-2xl font-semibold">
+        Loading Analytics...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
 
-      <h1 className="text-4xl font-bold mb-8">
+      <h1 className="text-4xl font-bold text-gray-800 mb-2">
         📊 Analytics Dashboard
       </h1>
+      <p className="text-gray-500 mb-8">
+        Overview of your financial performance
+      </p>
 
       {/* Summary Cards */}
 
       <div className="grid md:grid-cols-3 gap-6">
 
-        <div className="bg-green-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="bg-gradient-to-r from-green-500 to-green-700 text-white rounded-2xl shadow-xl p-8 hover:-translate-y-1 hover:scale-105 duration-300">
           <h2 className="text-xl font-semibold">Total Income</h2>
           <p className="text-3xl mt-4">
-            ₹ {summary.total_income}
+            ₹ {Number(summary.total_income).toLocaleString("en-IN")}
           </p>
         </div>
 
-        <div className="bg-red-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="bg-gradient-to-r from-red-500 to-red-700 text-white rounded-2xl shadow-xl p-8 hover:-translate-y-1 hover:scale-105 duration-300">
           <h2 className="text-xl font-semibold">Total Expense</h2>
           <p className="text-3xl mt-4">
-            ₹ {summary.total_expense}
+            ₹ {Number(summary.total_expense).toLocaleString("en-IN")}
           </p>
         </div>
 
-        <div className="bg-blue-600 text-white p-6 rounded-xl shadow-lg">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-2xl shadow-xl p-8 hover:-translate-y-1 hover:scale-105 duration-300">
           <h2 className="text-xl font-semibold">Balance</h2>
           <p className="text-3xl mt-4">
-            ₹ {summary.balance}
+            ₹ {Number(summary.balance).toLocaleString("en-IN")}
           </p>
         </div>
 
@@ -139,15 +159,23 @@ function Analytics() {
         </h2>
 
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={monthlyData}>
+          <BarChart data={monthlyData}
+                    barCategoryGap={20}
+          >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip />
+            <Tooltip
+              contentStyle={{
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              }}
+            />
             <Legend />
 
-            <Bar dataKey="income" fill="#00C49F" />
-            <Bar dataKey="expense" fill="#FF4560" />
+            <Bar dataKey="income" fill="#00C49F" animationDuration={1200}/>
+            <Bar dataKey="expense" fill="#FF4560" animationDuration={1200}/>
 
           </BarChart>
         </ResponsiveContainer>
@@ -170,7 +198,7 @@ function Analytics() {
               dataKey="total"
               nameKey="category"
               outerRadius={120}
-              label
+              label={({ category, percent }) =>`${category} ${(percent * 100).toFixed(0)}%`}
             >
               {categoryData.map((entry, index) => (
                 <Cell
@@ -180,7 +208,13 @@ function Analytics() {
               ))}
             </Pie>
 
-            <Tooltip />
+            <Tooltip
+              contentStyle={{
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              }}
+            />
             <Legend />
 
           </PieChart>
@@ -206,7 +240,13 @@ function Analytics() {
 
             <YAxis />
 
-            <Tooltip />
+            <Tooltip
+              contentStyle={{
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              }}
+            />
 
             <Legend />
 
@@ -214,14 +254,18 @@ function Analytics() {
               type="monotone"
               dataKey="income"
               stroke="#00C49F"
-              strokeWidth={3}
+              strokeWidth={4}
+              dot={{ r: 5 }}
+              animationDuration={1200}
             />
 
             <Line
               type="monotone"
               dataKey="expense"
               stroke="#FF4560"
-              strokeWidth={3}
+              strokeWidth={4}
+              dot={{ r: 5 }}
+              animationDuration={1200}
             />
 
           </LineChart>
